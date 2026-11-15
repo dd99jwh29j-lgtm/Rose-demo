@@ -1,69 +1,96 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROSE Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROSE - Virtual Games</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body {
-  margin: 0;
-  background: #100d19;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-}
-header {
-  background: #241329;
-  padding: 25px;
-  color: #ff4f91;
-  font-size: 32px;
-  font-weight: bold;
-}
-main { padding: 30px 15px; }
-.card {
-  background: #261d31;
-  padding: 25px;
-  margin: 20px auto;
-  max-width: 450px;
-  border-radius: 18px;
-}
-button {
-  background: #ff4f91;
-  color: white;
-  border: 0;
-  padding: 13px 25px;
-  border-radius: 10px;
-  font-size: 16px;
-}
+body{margin:0;background:#100b20;color:white;font-family:Arial;text-align:center}
+header{background:#24133d;padding:22px;color:#ff5bbd;font-size:30px;font-weight:bold}
+main{padding:20px}
+.box{background:#241a38;padding:22px;border-radius:15px;margin:18px auto;max-width:400px}
+input,button{width:100%;box-sizing:border-box;padding:14px;margin:8px 0;border:0;border-radius:8px;font-size:16px}
+button{background:#ed42a5;color:white;font-weight:bold}
+.game{background:#39204e;padding:20px;margin:12px;border-radius:12px}
+.small{color:#bbb;font-size:13px}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <header>🌹 ROSE</header>
 <main>
-<h1>Welcome to ROSE</h1>
-<p>Your Virtual Points Gaming Demo</p>
-<div class="card">
-<h2>My Balance</h2>
-<h1 id="balance">1000 Points</h1>
-<button onclick="addPoints()">Add Demo Points</button>
+<div class="box" id="auth">
+<h2>Welcome to ROSE</h2>
+<input id="email" type="email" placeholder="Email address">
+<input id="password" type="password" placeholder="Password">
+<button onclick="signup()">Create Account</button>
+<button onclick="login()">Login</button>
+<p id="message" class="small"></p>
 </div>
-<div class="card">
-<h2>✈️ Aviator Demo</h2>
+
+<div id="dashboard" class="hidden">
+<div class="box">
+<h2>Welcome!</h2>
+<p>Your Virtual Points</p>
+<h1 id="balance">0</h1>
+<button onclick="logout()">Logout</button>
+</div>
+<div class="game">
+<h2>✈️ Aviator</h2>
 <p>Coming Soon</p>
 </div>
-<div class="card">
-<h2>🏏 Cricket Updates</h2>
+<div class="game">
+<h2>🏏 Live Cricket</h2>
 <p>Coming Soon</p>
 </div>
-<p>Virtual points only. No real money or cash withdrawals.</p>
+<p class="small">ROSE Demo • Virtual points only</p>
+</div>
 </main>
+
 <script>
-let balance = 1000;
-function addPoints() {
- balance += 100;
- document.getElementById("balance").innerText =
- balance + " Points";
+const SUPABASE_URL = "https://umyptqmgnwryfhhyhnvw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vDxD-efuruGj8oGVCGUsPQ_R0DGEqju";
+const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+async function signup(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const msg=document.getElementById("message");
+ if(!email || password.length<6){msg.innerText="Email aur kam se kam 6 character ka password dalein.";return;}
+ const {error}=await db.auth.signUp({email,password});
+ msg.innerText=error ? error.message : "Account created. Email confirmation required ho sakta hai. Phir login karein.";
 }
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const msg=document.getElementById("message");
+ const {error}=await db.auth.signInWithPassword({email,password});
+ if(error){msg.innerText=error.message;return;}
+ await showDashboard();
+}
+
+async function showDashboard(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user)return;
+ const {data,error}=await db.from("profiles").select("points").eq("id",user.id).single();
+ if(error){document.getElementById("message").innerText=error.message;return;}
+ document.getElementById("balance").innerText=data.points ?? 0;
+ document.getElementById("auth").classList.add("hidden");
+ document.getElementById("dashboard").classList.remove("hidden");
+}
+
+async function logout(){
+ await db.auth.signOut();
+ location.reload();
+}
+
+db.auth.getSession().then(({data})=>{
+ if(data.session) showDashboard();
+});
 </script>
 </body>
 </html>
+
