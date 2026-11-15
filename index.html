@@ -49,11 +49,95 @@ button{background:#ed42a5;color:white;font-weight:bold}
 <div id="history">Loading history...</div>
 </div>
 
+
 <div class="box">
-<h2>Games</h2>
-<p>✈️ Aviator — Coming Soon</p>
+<h2>🎮 Games</h2>
+
+<div class="box">
+<h2>✈️ Aviator Demo</h2>
+<p id="multiplier">1.00x</p>
+<p id="gameStatus">Game Ready</p>
+
+<input id="betAmount" type="number"
+min="25" max="50000" value="100"
+placeholder="Enter Demo Points">
+
+<button onclick="startAviator()">Start Demo Game</button>
+<button onclick="cashOut()">Cash Out</button>
+
+<p id="gameResult"></p>
+</div>
+
 <p>🏏 Live Cricket — Coming Soon</p>
 </div>
+
+<script>
+let aviatorTimer = null;
+let multiplier = 1;
+let running = false;
+let crashed = false;
+let bet = 0;
+let demoBalance = 10000;
+
+function startAviator() {
+  if (running) return;
+
+  bet = Number(document.getElementById("betAmount").value);
+
+  if (!Number.isInteger(bet) || bet < 25 || bet > 50000) {
+    document.getElementById("gameResult").textContent =
+      "Bet 25 se 50000 ke beech honi chahiye.";
+    return;
+  }
+
+  if (bet > demoBalance) {
+    document.getElementById("gameResult").textContent =
+      "Demo points kam hain.";
+    return;
+  }
+
+  demoBalance -= bet;
+  multiplier = 1;
+  running = true;
+  crashed = false;
+
+  document.getElementById("gameStatus").textContent = "Flying...";
+  document.getElementById("gameResult").textContent =
+    "Demo Balance: " + demoBalance;
+
+  aviatorTimer = setInterval(() => {
+    multiplier += 0.01 + Math.random() * 0.04;
+
+    document.getElementById("multiplier").textContent =
+      multiplier.toFixed(2) + "x";
+
+    if (Math.random() < 0.025 || multiplier >= 78) {
+      clearInterval(aviatorTimer);
+      running = false;
+      crashed = true;
+
+      document.getElementById("gameStatus").textContent = "CRASHED!";
+      document.getElementById("gameResult").textContent =
+        "You lost " + bet + " demo points. Balance: " + demoBalance;
+    }
+  }, 100);
+}
+
+function cashOut() {
+  if (!running) return;
+
+  clearInterval(aviatorTimer);
+  running = false;
+
+  const win = Math.floor(bet * multiplier);
+  demoBalance += win;
+
+  document.getElementById("gameStatus").textContent = "Cashed Out!";
+  document.getElementById("gameResult").textContent =
+    "Won " + win + " demo points. Balance: " + demoBalance;
+}
+</script>
+
 </div>
 </main>
 
