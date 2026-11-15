@@ -48,7 +48,7 @@ function startRound(){
  const bet = Number(document.getElementById('bet').value);
 if(!Number.isFinite(bet)||bet<25||bet>50000||bet%25!==0){
  alert('Bet 25 se 50000 ke beech 25 ke multiple me dalein');
- return;
+ return;}
 if(bet > score){
  alert('Demo points kam hain');
  return;
