@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROSE Admin</title>
+<style>
+body{margin:0;background:#100d19;color:white;font-family:Arial;text-align:center}
+header{background:#241329;color:#ff4f91;padding:25px;font-size:30px;font-weight:bold}
+.card{background:#261d31;padding:25px;margin:25px auto;max-width:400px;border-radius:15px}
+input,button{width:90%;padding:13px;margin:10px;border:0;border-radius:8px;box-sizing:border-box}
+button{background:#ff4f91;color:white;font-weight:bold}
+a{color:#ff8ab7}
+</style>
+</head>
+<body>
+<header>🌹 ROSE ADMIN</header>
+
+<div class="card" id="login">
+<h2>Admin Login</h2>
+<input id="username" placeholder="Admin Username">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+</div>
+
+<div class="card" id="dashboard" style="display:none">
+<h2>Welcome Admin</h2>
+<p>ROSE Virtual Points Demo</p>
+<h3>User Management</h3>
+<p>Backend connection pending</p>
+<button onclick="logout()">Logout</button>
+</div>
+
+<p><a href="./">Back to User Website</a></p>
+<p>Virtual points only. No real money transactions.</p>
+
+<script>
+function login(){
+document.getElementById("msg").innerText=
+"Secure admin login setup is pending. Backend connection required.";
+}
+function logout(){
+document.getElementById("dashboard").style.display="none";
+document.getElementById("login").style.display="block";
+}
+</script>
+</body>
+</html>
