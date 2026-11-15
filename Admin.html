@@ -20,7 +20,6 @@ button{background:#e83b9e;color:white;font-weight:bold}
 </head>
 <body>
 <h1>🌹 ROSE ADMIN</h1>
-
 <div class="box" id="loginBox">
 <h2>Admin Login</h2>
 <input id="email" type="email" placeholder="Admin Email">
@@ -32,7 +31,6 @@ button{background:#e83b9e;color:white;font-weight:bold}
 <div id="panel" class="hidden">
 <div class="box">
 <h2>Admin Dashboard</h2>
-<p>Welcome to ROSE Admin</p>
 <button onclick="loadUsers()">Refresh Users</button>
 <button onclick="loadHistory()">Refresh History</button>
 <button onclick="logout()">Logout</button>
@@ -40,7 +38,7 @@ button{background:#e83b9e;color:white;font-weight:bold}
 </div>
 
 <div class="box">
-<h2>All Users</h2>
+<h2>User Management</h2>
 <div id="users">Loading...</div>
 </div>
 
@@ -94,21 +92,50 @@ async function loadUsers(){
 const box=document.getElementById("users");
 box.innerText="Loading users...";
 const {data,error}=await db.from("profiles")
-.select("id,username,points,role").order("username");
+.select("id,username,points,role,is_blocked").order("username");
 if(error){box.innerText="Error: "+error.message;return;}
 box.innerHTML="";
 data.forEach(u=>{
 const div=document.createElement("div");div.className="user";
-const name=document.createElement("b");name.textContent=u.username||"User";
+const name=document.createElement("b");
+name.textContent=u.username||"User";
 const info=document.createElement("p");
 info.textContent="Points: "+u.points+" | Role: "+u.role;
+const status=document.createElement("p");
+status.textContent="Status: "+(u.is_blocked?"BLOCKED":"ACTIVE");
 const id=document.createElement("p");id.className="small";
 id.textContent="User ID: "+u.id;
-const btn=document.createElement("button");btn.textContent="Select User";
-btn.onclick=()=>document.getElementById("userId").value=u.id;
-div.append(name,info,id,btn);box.appendChild(div);
+const select=document.createElement("button");
+select.textContent="Select User";
+select.onclick=()=>document.getElementById("userId").value=u.id;
+div.append(name,info,status,id,select);
+
+if(u.role==="user"){
+const block=document.createElement("button");
+block.textContent=u.is_blocked?"UNBLOCK USER":"BLOCK USER";
+block.style.background=u.is_blocked?"#238b57":"#c73535";
+block.onclick=()=>toggleBlock(u.id,!u.is_blocked,block);
+div.appendChild(block);
+}
+box.appendChild(div);
 });
 document.getElementById("status").innerText="Total users: "+data.length;
+}
+
+async function toggleBlock(id,blocked,button){
+button.disabled=true;
+button.textContent="Please wait...";
+const {error}=await db.rpc("admin_set_user_blocked",{
+target_user_id:id,blocked:blocked
+});
+if(error){
+alert("Error: "+error.message);
+button.disabled=false;
+await loadUsers();
+return;
+}
+alert(blocked?"User blocked successfully":"User unblocked successfully");
+await loadUsers();
 }
 
 async function loadHistory(){
