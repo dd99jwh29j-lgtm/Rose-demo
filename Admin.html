@@ -4,47 +4,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROSE Admin</title>
+<title>ROSE Admin Panel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{margin:0;background:#100d19;color:white;font-family:Arial;text-align:center}
-header{background:#241329;color:#ff4f91;padding:25px;font-size:30px;font-weight:bold}
-.card{background:#261d31;padding:25px;margin:25px auto;max-width:400px;border-radius:15px}
-input,button{width:90%;padding:13px;margin:10px;border:0;border-radius:8px;box-sizing:border-box}
-button{background:#ff4f91;color:white;font-weight:bold}
-a{color:#ff8ab7}
+*{box-sizing:border-box}
+body{margin:0;background:#100b20;color:white;font-family:Arial;padding:18px}
+h1{color:#ff55b5;text-align:center}
+.box{background:#251938;padding:18px;border-radius:14px;margin:15px auto;max-width:650px}
+input,button{width:100%;padding:13px;margin:7px 0;border:0;border-radius:8px;font-size:15px}
+button{background:#e83b9e;color:white;font-weight:bold}
+.user{background:#39264c;padding:13px;border-radius:9px;margin:10px 0;overflow-wrap:anywhere}
+.small{color:#ccc;font-size:13px;overflow-wrap:anywhere}
+.hidden{display:none}
 </style>
 </head>
 <body>
-<header>🌹 ROSE ADMIN</header>
 
-<div class="card" id="login">
+<h1>🌹 ROSE ADMIN</h1>
+
+<div class="box" id="loginBox">
 <h2>Admin Login</h2>
-<input id="username" placeholder="Admin Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<p id="msg"></p>
+<input id="email" type="email" placeholder="Admin Email">
+<input id="password" type="password" placeholder="Admin Password">
+<button id="loginBtn" onclick="login()">LOGIN</button>
+<p id="msg" class="small"></p>
 </div>
 
-<div class="card" id="dashboard" style="display:none">
-<h2>Welcome Admin</h2>
-<p>ROSE Virtual Points Demo</p>
-<h3>User Management</h3>
-<p>Backend connection pending</p>
+<div id="panel" class="hidden">
+<div class="box">
+<h2>Admin Dashboard</h2>
+<p>Welcome to ROSE Admin</p>
+<button onclick="loadUsers()">Refresh Users</button>
 <button onclick="logout()">Logout</button>
+<p id="status" class="small"></p>
 </div>
 
-<p><a href="./">Back to User Website</a></p>
-<p>Virtual points only. No real money transactions.</p>
+<div class="box">
+<h2>All Users</h2>
+<div id="users">Loading...</div>
+</div>
+
+<div class="box">
+<h2>Update Virtual Points</h2>
+<input id="userId" placeholder="Selected User ID">
+<input id="amount" type="number" placeholder="Points (+ add / - subtract)">
+<input id="reason" placeholder="Reason">
+<button onclick="adjustPoints()">UPDATE POINTS</button>
+<p id="adjustMsg" class="small"></p>
+</div>
+</div>
 
 <script>
-function login(){
-document.getElementById("msg").innerText=
-"Secure admin login setup is pending. Backend connection required.";
+const db = window.supabase.createClient(
+ "https://umyptqmgnwryfhhyhnvw.supabase.co",
+ "sb_publishable_vDxD-efuruGj8oGVCGUsPQ_R0DGEqju"
+);
+
+async function login(){
+ const msg=document.getElementById("msg");
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ if(!email || !password){
+  msg.innerText="Email aur password bharein.";
+  return;
+ }
+ document.getElementById("loginBtn").disabled=true;
+ msg.innerText="Checking login...";
+ const {error}=await db.auth.signInWithPassword({email,password});
+ document.getElementById("loginBtn").disabled=false;
+ if(error){msg.innerText=error.message;return;}
+ await checkAdmin();
 }
-function logout(){
-document.getElementById("dashboard").style.display="none";
-document.getElementById("login").style.display="block";
+
+async function checkAdmin(){
+ const msg=document.getElementById("msg");
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError || !user){
+  msg.innerText="Please login again.";
+  return;
+ }
+ const {data,error}=await db.from("profiles")
+  .select("role").eq("id",user.id).single();
+
+ if(error || !data || data.role!=="admin"){
+  msg.innerText="Admin access denied. This account is not an admin.";
+  await db.auth.signOut();
+  return;
+ }
+ document.getElementById("loginBox").classList.add("hidden");
+ document.getElementById("panel").classList.remove("hidden");
+ await loadUsers();
 }
+
+async function loadUsers(){
+ const box=document.getElementById("users");
+ box.innerText="Loading users...";
+ const {data,error}=await db.from("profiles")
+  .select("id,username,points,role").order("username");
+
+ if(error){box.innerText="Error: "+error.message;return;}
+ box.innerHTML="";
+ data.forEach(u=>{
+  const div=document.createElement("div");
+  div.className="user";
+  const name=document.createElement("b");
+  name.textContent=u.username || "User";
+  const info=document.createElement("p");
+  info.textContent="Points: "+u.points+" | Role: "+u.role;
+  const id=document.createElement("p");
+  id.className="small";
+  id.textContent="User ID: "+u.id;
+  const btn=document.createElement("button");
+  btn.textContent="Select User";
+  btn.onclick=()=>document.getElementById("userId").value=u.id;
+  div.append(name,info,id,btn);
+  box.appendChild(div);
+ });
+ document.getElementById("status").innerText="Total users: "+data.length;
+}
+
+async function adjustPoints(){
+ const userId=document.getElementById("userId").value.trim();
+ const amount=Number(document.getElementById("amount").value);
+ const reason=document.getElementById("reason").value.trim();
+ const msg=document.getElementById("adjustMsg");
+
+ if(!userId || !Number.isSafeInteger(amount) || amount===0 || !reason){
+  msg.innerText="User ID, valid points aur reason bharein.";
+  return;
+ }
+ const {error}=await db.rpc("admin_adjust_points",{
+  target_user_id:userId,
+  amount:amount,
+  reason:reason
+ });
+ if(error){msg.innerText="Error: "+error.message;return;}
+ msg.innerText="Virtual points updated successfully!";
+ document.getElementById("amount").value="";
+ document.getElementById("reason").value="";
+ await loadUsers();
+}
+
+async function logout(){
+ await db.auth.signOut();
+ location.reload();
+}
+
+db.auth.getSession().then(({data,error})=>{
+ if(!error && data.session) checkAdmin();
+});
 </script>
 </body>
 </html>
+
