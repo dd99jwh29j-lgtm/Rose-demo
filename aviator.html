@@ -60,7 +60,7 @@ function startRound(){
  },100);
 }
 function crash(){
- clearInterval(timer);running=false;
+ crashAt=1.20+Math.random()*1.80;
  mult.textContent='CRASH';
  mult.style.color='#ff667e';
  statusText.textContent='Round khatam! Dobara try karein.';
