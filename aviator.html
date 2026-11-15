@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROSE Aviator Demo</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#100b20;color:white;font-family:Arial;text-align:center}
+header{padding:20px;background:#24133d;color:#ff70bd;font-size:26px;font-weight:bold}
+main{max-width:600px;margin:auto;padding:16px}
+.box{background:#241a38;padding:18px;border-radius:15px;margin:15px 0}
+.stage{height:240px;background:linear-gradient(#152b46,#172039);border-radius:12px;overflow:hidden;position:relative}
+#plane{position:absolute;left:8%;bottom:20%;font-size:40px}
+#mult{font-size:44px;color:#70f0a2;margin:18px}
+button{width:100%;padding:15px;margin-top:10px;border:0;border-radius:9px;background:#ed42a5;color:white;font-size:17px;font-weight:bold}
+button:disabled{opacity:.4}
+small{color:#bbb}
+</style>
+</head>
+<body>
+<header>🌹 ROSE AVIATOR</header>
+<main>
+<div class="box">
+Demo Score: <b id="score">0</b>
+<p><small>Free demo points only. Account balance se connected nahi.</small></p>
+</div>
+<div class="box">
+<div class="stage"><div id="plane">✈️</div></div>
+<div id="mult">1.00x</div>
+<p id="status">Start dabayein</p>
+<button id="start" onclick="startRound()">START DEMO</button>
+<button id="collect" onclick="collect()" disabled>COLLECT DEMO POINTS</button>
+</div>
+<p><small>Only entertainment demo. No real money, betting or prizes.</small></p>
+<a href="index.html" style="color:pink">Back to ROSE</a>
+</main>
+<script>
+let running=false,multiplier=1,crashAt=2,timer=null,score=0;
+const mult=document.getElementById('mult');
+const statusText=document.getElementById('status');
+const plane=document.getElementById('plane');
+const startBtn=document.getElementById('start');
+const collectBtn=document.getElementById('collect');
+
+function startRound(){
+ if(running)return;
+ running=true;multiplier=1;
+ crashAt=1.15+Math.random()*4.2;
+ mult.textContent='1.00x';
+ statusText.textContent='Plane ud raha hai...';
+ startBtn.disabled=true;collectBtn.disabled=false;
+ plane.style.transform='translate(0,0)';
+ timer=setInterval(()=>{
+  multiplier+=0.02+multiplier*0.006;
+  mult.textContent=multiplier.toFixed(2)+'x';
+  plane.style.transform='translate('+Math.min(390,(multiplier-1)*85)+'px,-'+Math.min(145,(multiplier-1)*32)+'px)';
+  if(multiplier>=crashAt)crash();
+ },100);
+}
+function crash(){
+ clearInterval(timer);running=false;
+ mult.textContent='CRASH';
+ mult.style.color='#ff667e';
+ statusText.textContent='Round khatam! Dobara try karein.';
+ startBtn.disabled=false;collectBtn.disabled=true;
+}
+function collect(){
+ if(!running)return;
+ clearInterval(timer);running=false;
+ const earned=Math.floor(multiplier*10);
+ score+=earned;
+ document.getElementById('score').textContent=score;
+ statusText.textContent='Aapne '+earned+' demo points collect kiye!';
+ startBtn.disabled=false;collectBtn.disabled=true;
+ mult.style.color='#70f0a2';
+}
+</script>
+</body>
+</html>
