@@ -49,7 +49,13 @@ function startRound(){
 if(!Number.isFinite(bet)||bet<25||bet>50000||bet%25!==0){
  alert('Bet 25 se 50000 ke beech 25 ke multiple me dalein');
  return;
+if(bet > score){
+ alert('Demo points kam hain');
+ return;
 }
+currentBet = bet;
+score -= bet;
+document.getElementById('score').textContent = score;
  running=true;multiplier=1;
  crashAt=1.15+Math.random()*4.2;
  mult.textContent='1.00x';
