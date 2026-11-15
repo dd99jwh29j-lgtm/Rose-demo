@@ -63,78 +63,109 @@ const db=window.supabase.createClient(
 "sb_publishable_vDxD-efuruGj8oGVCGUsPQ_R0DGEqju"
 );
 
-function msg(t){document.getElementById("message").textContent=t;}
+function msg(t){
+document.getElementById("message").textContent=t;
+}
 
 async function signup(){
- const email=document.getElementById("email").value.trim();
- const password=document.getElementById("password").value;
- if(!email || password.length<6){msg("Email aur 6 character ka password dalein.");return;}
- const {error}=await db.auth.signUp({email,password});
- msg(error?error.message:"Account created. Email verify karke login karein.");
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+if(!email||password.length<6){
+msg("Email aur 6 character ka password dalein.");return;
+}
+const {error}=await db.auth.signUp({email,password});
+msg(error?error.message:"Account created. Email verify karke login karein.");
 }
 
 async function login(){
- const email=document.getElementById("email").value.trim();
- const password=document.getElementById("password").value;
- if(!email||!password){msg("Email aur password bharein.");return;}
- const {error}=await db.auth.signInWithPassword({email,password});
- if(error){msg(error.message);return;}
- await showDashboard();
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+if(!email||!password){msg("Email aur password bharein.");return;}
+
+msg("Checking login...");
+const {error}=await db.auth.signInWithPassword({email,password});
+if(error){msg(error.message);return;}
+
+const {data:{user}}=await db.auth.getUser();
+const {data,error:profileError}=await db.from("profiles")
+.select("is_blocked").eq("id",user.id).single();
+
+if(profileError){
+await db.auth.signOut();
+msg("Profile check nahi ho paya. Dobara try karein.");
+return;
+}
+if(data.is_blocked){
+await db.auth.signOut();
+msg("Your account is blocked. Admin se contact karein.");
+return;
+}
+await showDashboard();
 }
 
 async function showDashboard(){
- const {data:{user}}=await db.auth.getUser();
- if(!user)return;
- document.getElementById("auth").classList.add("hidden");
- document.getElementById("dashboard").classList.remove("hidden");
- await refreshProfile();
+const {data:{user}}=await db.auth.getUser();
+if(!user)return;
+
+const {data,error}=await db.from("profiles")
+.select("username,points,is_blocked").eq("id",user.id).single();
+
+if(error||!data)return;
+if(data.is_blocked){
+await db.auth.signOut();
+document.getElementById("dashboard").classList.add("hidden");
+document.getElementById("auth").classList.remove("hidden");
+msg("Your account is blocked. Admin se contact karein.");
+return;
+}
+
+document.getElementById("auth").classList.add("hidden");
+document.getElementById("dashboard").classList.remove("hidden");
+document.getElementById("username").textContent=data.username||"ROSE User";
+document.getElementById("balance").textContent=data.points??0;
+await loadHistory(user.id);
 }
 
 async function refreshProfile(){
- const {data:{user}}=await db.auth.getUser();
- if(!user)return;
- const {data,error}=await db.from("profiles")
- .select("username,points").eq("id",user.id).single();
- if(error){msg(error.message);return;}
- document.getElementById("username").textContent=data.username||"ROSE User";
- document.getElementById("balance").textContent=data.points??0;
- await loadHistory(user.id);
+await showDashboard();
 }
 
 async function loadHistory(userId){
- const box=document.getElementById("history");
- box.textContent="Loading...";
- const {data,error}=await db.from("points_history")
- .select("*").eq("user_id",userId)
- .order("created_at",{ascending:false}).limit(30);
- if(error){box.textContent="History unavailable: "+error.message;return;}
- if(!data||data.length===0){box.textContent="Abhi koi points history nahi hai.";return;}
- box.innerHTML="";
- data.forEach(row=>{
-  const item=document.createElement("div");
-  item.className="history";
-  const amount=row.amount??row.points_change??row.change_amount??row.delta;
-  const reason=row.reason??row.description??"Virtual points update";
-  const date=row.created_at?new Date(row.created_at).toLocaleString():"";
-  const title=document.createElement("b");
-  title.textContent=amount===undefined?"Points update":(Number(amount)>0?"+":"")+amount+" points";
-  const detail=document.createElement("p");
-  detail.textContent=String(reason);
-  const when=document.createElement("p");
-  when.className="small";
-  when.textContent=date;
-  item.append(title,detail,when);
-  box.appendChild(item);
- });
+const box=document.getElementById("history");
+box.textContent="Loading...";
+const {data,error}=await db.from("points_history")
+.select("*").eq("user_id",userId)
+.order("created_at",{ascending:false}).limit(30);
+if(error){box.textContent="History unavailable: "+error.message;return;}
+if(!data||data.length===0){
+box.textContent="Abhi koi points history nahi hai.";return;
+}
+box.innerHTML="";
+data.forEach(row=>{
+const item=document.createElement("div");
+item.className="history";
+const amount=row.amount??row.points_change??row.change_amount??row.delta;
+const reason=row.reason??row.description??"Virtual points update";
+const date=row.created_at?new Date(row.created_at).toLocaleString():"";
+const title=document.createElement("b");
+title.textContent=amount===undefined?"Points update":(Number(amount)>0?"+":"")+amount+" points";
+const detail=document.createElement("p");
+detail.textContent=String(reason);
+const when=document.createElement("p");
+when.className="small";
+when.textContent=date;
+item.append(title,detail,when);
+box.appendChild(item);
+});
 }
 
 async function logout(){
- await db.auth.signOut();
- location.reload();
+await db.auth.signOut();
+location.reload();
 }
 
 db.auth.getSession().then(({data})=>{
- if(data.session)showDashboard();
+if(data.session)showDashboard();
 });
 </script>
 </body>
