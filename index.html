@@ -1,1 +1,69 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROSE Demo</title>
+<style>
+body {
+  margin: 0;
+  background: #100d19;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+header {
+  background: #241329;
+  padding: 25px;
+  color: #ff4f91;
+  font-size: 32px;
+  font-weight: bold;
+}
+main { padding: 30px 15px; }
+.card {
+  background: #261d31;
+  padding: 25px;
+  margin: 20px auto;
+  max-width: 450px;
+  border-radius: 18px;
+}
+button {
+  background: #ff4f91;
+  color: white;
+  border: 0;
+  padding: 13px 25px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+<header>🌹 ROSE</header>
+<main>
+<h1>Welcome to ROSE</h1>
+<p>Your Virtual Points Gaming Demo</p>
+<div class="card">
+<h2>My Balance</h2>
+<h1 id="balance">1000 Points</h1>
+<button onclick="addPoints()">Add Demo Points</button>
+</div>
+<div class="card">
+<h2>✈️ Aviator Demo</h2>
+<p>Coming Soon</p>
+</div>
+<div class="card">
+<h2>🏏 Cricket Updates</h2>
+<p>Coming Soon</p>
+</div>
+<p>Virtual points only. No real money or cash withdrawals.</p>
+</main>
+<script>
+let balance = 1000;
+function addPoints() {
+ balance += 100;
+ document.getElementById("balance").innerText =
+ balance + " Points";
+}
+</script>
+</body>
+</html>
