@@ -1,256 +1,108 @@
 
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROSE User Profile</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHIVA EXCHANGE</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#100b20;color:white;font-family:Arial;text-align:center}
-header{background:#24133d;padding:22px;color:#ff5bbd;font-size:30px;font-weight:bold}
-main{padding:18px}
-.box{background:#241a38;padding:20px;border-radius:15px;margin:16px auto;max-width:600px}
-h2{color:#ff8acb}
-input,button{width:100%;padding:14px;margin:8px 0;border:0;border-radius:8px;font-size:16px}
-button{background:#ed42a5;color:white;font-weight:bold}
-.small{color:#bbb;font-size:13px}
-.hidden{display:none}
-.history{background:#39204e;padding:12px;border-radius:9px;margin:10px 0}
-.points{font-size:36px;color:#ff83c7;font-weight:bold}
+body{
+ margin:0;
+ background:#101713;
+ color:white;
+ font-family:Arial,sans-serif;
+}
+header{
+ background:#17251c;
+ padding:22px 12px;
+ text-align:center;
+ border-bottom:2px solid #20c66b;
+}
+h1{color:#20e77a;margin:0}
+.subtitle{color:#aaa;margin-top:8px}
+.container{padding:20px;max-width:600px;margin:auto}
+.card{
+ background:#1b2921;
+ padding:20px;
+ border-radius:12px;
+ margin-bottom:15px;
+ border:1px solid #34483a;
+}
+input{
+ width:100%;
+ padding:14px;
+ margin:8px 0;
+ border-radius:7px;
+ border:1px solid #555;
+ background:#101713;
+ color:white;
+}
+button{
+ width:100%;
+ padding:14px;
+ background:#18b85d;
+ color:white;
+ border:0;
+ border-radius:7px;
+ font-size:16px;
+ font-weight:bold;
+}
+.games{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
+}
+.game{
+ background:#24372a;
+ padding:25px 8px;
+ text-align:center;
+ border-radius:10px;
+ border:1px solid #3b6046;
+}
+footer{text-align:center;color:#888;padding:20px}
 </style>
 </head>
 <body>
-<header>🌹 ROSE</header>
-<main>
-<div class="box" id="auth">
-<h2>Welcome to ROSE</h2>
-<input id="email" type="email" placeholder="Email address">
-<input id="password" type="password" placeholder="Password">
-<button onclick="signup()">Create Account</button>
-<button onclick="login()">Login</button>
-<p id="message" class="small"></p>
+<header>
+<h1>SHIVA EXCHANGE</h1>
+<div class="subtitle">YOUR DEMO GAMING PLATFORM</div>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>User Login</h2>
+<input id="username" placeholder="Enter Username">
+<input id="password" type="password" placeholder="Enter Password">
+<button onclick="login()">LOGIN</button>
+<p id="message"></p>
 </div>
 
-<div id="dashboard" class="hidden">
-<div class="box">
-<h2>My Profile</h2>
-<p>Welcome, <b id="username">ROSE User</b></p>
-<p>Your Virtual Points</p>
-<div class="points" id="balance">0</div>
-<p class="small">Virtual demo points only. No cash value.</p>
-<button onclick="refreshProfile()">Refresh Profile</button>
-<button onclick="logout()">Logout</button>
+<div class="card">
+<h2>Demo Games</h2>
+<div class="games">
+<div class="game">✈️<br><br>Aviator Demo</div>
+<div class="game">🏏<br><br>Cricket Demo</div>
+<div class="game">🎮<br><br>Arcade Demo</div>
+<div class="game">🎯<br><br>Other Games</div>
+</div>
+</div>
 </div>
 
-<div class="box">
-<h2>Points History</h2>
-<div id="history">Loading history...</div>
-</div>
-
-
-<div class="box">
-<h2>🎮 Games</h2>
-
-<div class="box">
-<h2>✈️ Aviator Demo</h2>
-<p id="multiplier">1.00x</p>
-<p id="gameStatus">Game Ready</p>
-
-<input id="betAmount" type="number"
-min="25" max="50000" value="100"
-placeholder="Enter Demo Points">
-
-<button onclick="startAviator()">Start Demo Game</button>
-<button onclick="cashOut()">Cash Out</button>
-
-<p id="gameResult"></p>
-</div>
-
-<p>🏏 Live Cricket — Coming Soon</p>
-</div>
+<footer>SHIVA EXCHANGE © 2026</footer>
 
 <script>
-let aviatorTimer = null;
-let multiplier = 1;
-let running = false;
-let crashed = false;
-let bet = 0;
-let demoBalance = 10000;
-
-function startAviator() {
-  if (running) return;
-
-  bet = Number(document.getElementById("betAmount").value);
-
-  if (!Number.isInteger(bet) || bet < 25 || bet > 50000) {
-    document.getElementById("gameResult").textContent =
-      "Bet 25 se 50000 ke beech honi chahiye.";
-    return;
-  }
-
-  if (bet > demoBalance) {
-    document.getElementById("gameResult").textContent =
-      "Demo points kam hain.";
-    return;
-  }
-
-  demoBalance -= bet;
-  multiplier = 1;
-  running = true;
-  crashed = false;
-
-  document.getElementById("gameStatus").textContent = "Flying...";
-  document.getElementById("gameResult").textContent =
-    "Demo Balance: " + demoBalance;
-
-  aviatorTimer = setInterval(() => {
-    multiplier += 0.01 + Math.random() * 0.04;
-
-    document.getElementById("multiplier").textContent =
-      multiplier.toFixed(2) + "x";
-
-    if (Math.random() < 0.025 || multiplier >= 78) {
-      clearInterval(aviatorTimer);
-      running = false;
-      crashed = true;
-
-      document.getElementById("gameStatus").textContent = "CRASHED!";
-      document.getElementById("gameResult").textContent =
-        "You lost " + bet + " demo points. Balance: " + demoBalance;
-    }
-  }, 100);
+function login(){
+ const u=document.getElementById("username").value.trim();
+ const p=document.getElementById("password").value;
+ if(!u || !p){
+ document.getElementById("message").textContent=
+ "Please enter username and password";
+ return;
+ }
+ document.getElementById("message").textContent=
+ "Demo login screen ready. Secure account setup is pending.";
 }
-
-function cashOut() {
-  if (!running) return;
-
-  clearInterval(aviatorTimer);
-  running = false;
-
-  const win = Math.floor(bet * multiplier);
-  demoBalance += win;
-
-  document.getElementById("gameStatus").textContent = "Cashed Out!";
-  document.getElementById("gameResult").textContent =
-    "Won " + win + " demo points. Balance: " + demoBalance;
-}
-</script>
-
-</div>
-</main>
-
-<script>
-const db=window.supabase.createClient(
-"https://umyptqmgnwryfhhyhnvw.supabase.co",
-"sb_publishable_vDxD-efuruGj8oGVCGUsPQ_R0DGEqju"
-);
-
-function msg(t){
-document.getElementById("message").textContent=t;
-}
-
-async function signup(){
-const email=document.getElementById("email").value.trim();
-const password=document.getElementById("password").value;
-if(!email||password.length<6){
-msg("Email aur 6 character ka password dalein.");return;
-}
-const {error}=await db.auth.signUp({email,password});
-msg(error?error.message:"Account created. Email verify karke login karein.");
-}
-
-async function login(){
-const email=document.getElementById("email").value.trim();
-const password=document.getElementById("password").value;
-if(!email||!password){msg("Email aur password bharein.");return;}
-
-msg("Checking login...");
-const {error}=await db.auth.signInWithPassword({email,password});
-if(error){msg(error.message);return;}
-
-const {data:{user}}=await db.auth.getUser();
-const {data,error:profileError}=await db.from("profiles")
-.select("is_blocked").eq("id",user.id).single();
-
-if(profileError){
-await db.auth.signOut();
-msg("Profile check nahi ho paya. Dobara try karein.");
-return;
-}
-if(data.is_blocked){
-await db.auth.signOut();
-msg("Your account is blocked. Admin se contact karein.");
-return;
-}
-await showDashboard();
-}
-
-async function showDashboard(){
-const {data:{user}}=await db.auth.getUser();
-if(!user)return;
-
-const {data,error}=await db.from("profiles")
-.select("username,points,is_blocked").eq("id",user.id).single();
-
-if(error||!data)return;
-if(data.is_blocked){
-await db.auth.signOut();
-document.getElementById("dashboard").classList.add("hidden");
-document.getElementById("auth").classList.remove("hidden");
-msg("Your account is blocked. Admin se contact karein.");
-return;
-}
-
-document.getElementById("auth").classList.add("hidden");
-document.getElementById("dashboard").classList.remove("hidden");
-document.getElementById("username").textContent=data.username||"ROSE User";
-document.getElementById("balance").textContent=data.points??0;
-await loadHistory(user.id);
-}
-
-async function refreshProfile(){
-await showDashboard();
-}
-
-async function loadHistory(userId){
-const box=document.getElementById("history");
-box.textContent="Loading...";
-const {data,error}=await db.from("points_history")
-.select("*").eq("user_id",userId)
-.order("created_at",{ascending:false}).limit(30);
-if(error){box.textContent="History unavailable: "+error.message;return;}
-if(!data||data.length===0){
-box.textContent="Abhi koi points history nahi hai.";return;
-}
-box.innerHTML="";
-data.forEach(row=>{
-const item=document.createElement("div");
-item.className="history";
-const amount=row.amount??row.points_change??row.change_amount??row.delta;
-const reason=row.reason??row.description??"Virtual points update";
-const date=row.created_at?new Date(row.created_at).toLocaleString():"";
-const title=document.createElement("b");
-title.textContent=amount===undefined?"Points update":(Number(amount)>0?"+":"")+amount+" points";
-const detail=document.createElement("p");
-detail.textContent=String(reason);
-const when=document.createElement("p");
-when.className="small";
-when.textContent=date;
-item.append(title,detail,when);
-box.appendChild(item);
-});
-}
-
-async function logout(){
-await db.auth.signOut();
-location.reload();
-}
-
-db.auth.getSession().then(({data})=>{
-if(data.session)showDashboard();
-});
 </script>
 </body>
 </html>
